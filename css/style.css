@@ -167,7 +167,7 @@ svg.logo { height: 52px; width: auto; }
 }
 /* Hero logo */
 .hero-logo { margin-bottom: 24px; display: flex; justify-content: center; position: relative; }
-.hero-logo-svg { width: 100%; max-width: 480px; height: auto; }
+.hero-logo-img { width: 100%; max-width: 420px; height: auto; margin: 0 auto; drop-shadow: 0 4px 24px rgba(0,0,0,.3); }
 div.lang-en-block, div.lang-nl-block { display: block; }
 body.nl div.lang-en-block { display: none; }
 body:not(.nl) div.lang-nl-block { display: none; }
