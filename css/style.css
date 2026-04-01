@@ -180,24 +180,54 @@ svg.logo { height: 44px; width: auto; }
 
 /* ===== Hero ===== */
 .hero {
-  background: var(--navy);
-  color: var(--white);
-  padding: 100px 0 80px;
   text-align: center;
   position: relative;
   overflow: hidden;
+  padding: 0;
 }
-.hero::before {
+/* Top: white background for logo */
+.hero-top {
+  background: var(--white);
+  padding: 48px 0 40px;
+  position: relative;
+}
+/* Bottom: dark navy for text & buttons */
+.hero-bottom {
+  background: var(--navy);
+  color: var(--white);
+  padding: 48px 0 80px;
+  position: relative;
+}
+.hero-bottom::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(21,101,192,.25) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(211,17,30,.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(21,101,192,.1) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(211,17,30,.1) 0%, transparent 60%);
 }
-/* Water wave at bottom */
-.hero::after {
+/* Wave divider between white top and dark bottom */
+.hero-wave {
+  position: relative;
+  height: 64px;
+  margin-top: -1px;
+  background: var(--navy);
+}
+.hero-wave::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--white);
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1200 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,0 L0,32 C200,64 400,0 600,32 C800,64 1000,0 1200,32 L1200,0Z' fill='white'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1200 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,0 L0,32 C200,64 400,0 600,32 C800,64 1000,0 1200,32 L1200,0Z' fill='white'/%3E%3C/svg%3E");
+  mask-size: cover;
+  -webkit-mask-size: cover;
+}
+/* Wave at very bottom into content */
+.hero-bottom::after {
   content: '';
   position: absolute;
   bottom: -2px;
@@ -222,10 +252,9 @@ svg.logo { height: 44px; width: auto; }
   max-width: 440px;
   height: auto;
   margin: 0 auto;
-  filter: drop-shadow(0 8px 32px rgba(0,0,0,.4));
 }
 
-.hero p {
+.hero-bottom p {
   font-size: clamp(1.05rem, 2.2vw, 1.2rem);
   opacity: .75;
   max-width: 560px;
