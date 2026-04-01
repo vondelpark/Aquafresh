@@ -19,7 +19,7 @@ var DEFAULT_PRICING = {
 };
 
 var DEFAULT_CONTACT = {
-  email: 'info@aquafresh-amsterdam.nl',
+  email: 'info@aquafreshboats.nl',
   phone: '+31 6 1234 5678',
   whatsapp: '31612345678',
   location: 'Amsterdam, Nederland'
