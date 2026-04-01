@@ -2,8 +2,10 @@
 function setLang(lang) {
   if (lang === 'nl') {
     document.body.classList.add('nl');
+    document.documentElement.lang = 'nl';
   } else {
     document.body.classList.remove('nl');
+    document.documentElement.lang = 'en';
   }
   localStorage.setItem('aquafresh-lang', lang);
   updateEstimate();
@@ -14,10 +16,16 @@ function toggleLang() {
   setLang(isNl ? 'en' : 'nl');
 }
 
-/* Restore saved language */
+/* Restore saved language — default is Dutch */
 (function () {
   var saved = localStorage.getItem('aquafresh-lang');
-  if (saved === 'nl') document.body.classList.add('nl');
+  if (saved === 'en') {
+    document.body.classList.remove('nl');
+    document.documentElement.lang = 'en';
+  } else {
+    document.body.classList.add('nl');
+    document.documentElement.lang = 'nl';
+  }
 })();
 
 /* ===== Mobile Nav ===== */
