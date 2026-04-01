@@ -140,9 +140,20 @@ nav {
   flex-shrink: 0;
 }
 .btn-nav-wa {
-  padding: 8px 18px;
-  font-size: .85rem;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
+  background: var(--green-wa);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s var(--ease);
+  flex-shrink: 0;
+}
+.btn-nav-wa:hover {
+  background: var(--green-wa-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37,211,102,.3);
 }
 .lang-toggle {
   background: var(--white);
