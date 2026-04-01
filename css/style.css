@@ -952,6 +952,15 @@ footer::before {
 }
 .wa-float:hover::after { opacity: 1; }
 
+/* ===== Admin Link ===== */
+.admin-link {
+  font-size: .7rem;
+  color: rgba(255,255,255,.15);
+  text-decoration: none;
+  transition: color .2s var(--ease);
+}
+.admin-link:hover { color: rgba(255,255,255,.4); }
+
 /* ===== Utilities ===== */
 .text-center { text-align: center; }
 .mt-24 { margin-top: 24px; }

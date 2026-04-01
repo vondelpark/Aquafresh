@@ -60,23 +60,90 @@ document.addEventListener('click', function (e) {
 });
 
 /* ===== Pricing Logic ===== */
-var RATES = {
-  // per m2 base rates
-  exterior: 8,
-  interior: 10,
-  full: 15,
-
-  // surcharges (flat euro amounts)
-  closed: 30,     // closed cabin surcharge
-  canvas: 25,     // canvas cleaning
-  teak: 40,       // teak / wood treatment
-  metal: 35,      // metal polishing
-
-  // minimum prices
-  minExterior: 75,
-  minInterior: 75,
-  minFull: 125
+/* Defaults — overridden by admin panel via localStorage */
+var DEFAULT_RATES = {
+  exterior: 8, interior: 10, full: 15,
+  closed: 30, canvas: 25, teak: 40, metal: 35,
+  minExterior: 75, minInterior: 75, minFull: 125
 };
+
+function loadRates() {
+  try {
+    var saved = localStorage.getItem('aquafresh-pricing');
+    if (saved) return JSON.parse(saved);
+  } catch (e) { /* ignore */ }
+  return DEFAULT_RATES;
+}
+var RATES = loadRates();
+
+/* ===== Contact Info (admin-configurable) ===== */
+function loadContact() {
+  try {
+    var saved = localStorage.getItem('aquafresh-contact');
+    if (saved) return JSON.parse(saved);
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+/* Apply admin-configured contact info to the page */
+(function applyContactInfo() {
+  var c = loadContact();
+  if (!c) return;
+
+  /* Update WhatsApp links */
+  if (c.whatsapp) {
+    document.querySelectorAll('a[href*="wa.me"]').forEach(function (a) {
+      a.href = 'https://wa.me/' + c.whatsapp;
+    });
+  }
+  /* Update email links */
+  if (c.email) {
+    document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
+      a.href = 'mailto:' + c.email;
+      a.textContent = c.email;
+    });
+  }
+  /* Update phone links */
+  if (c.phone) {
+    document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+      a.href = 'tel:' + c.phone.replace(/\s/g, '');
+      a.textContent = c.phone;
+    });
+  }
+})();
+
+/* ===== Google Calendar Availability ===== */
+(function applyCalendar() {
+  try {
+    var saved = localStorage.getItem('aquafresh-calendar');
+    if (!saved) return;
+    var cal = JSON.parse(saved);
+    if (!cal.enabled || !cal.calendarId) return;
+
+    /* Inject calendar embed into booking section */
+    var bookingForm = document.querySelector('.booking-form');
+    if (!bookingForm) return;
+
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'padding:14px 20px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;font-weight:600;font-size:.9rem;color:#334155;';
+    header.innerHTML = '<span class="lang-nl">Beschikbaarheid</span><span class="lang-en">Availability</span>';
+
+    var iframe = document.createElement('iframe');
+    iframe.src = 'https://calendar.google.com/calendar/embed?src='
+      + encodeURIComponent(cal.calendarId)
+      + '&ctz=Europe%2FAmsterdam&mode=WEEK&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0';
+    iframe.style.cssText = 'width:100%;height:350px;border:none;display:block;';
+    iframe.loading = 'lazy';
+    iframe.title = 'Availability Calendar';
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(iframe);
+    bookingForm.insertBefore(wrapper, bookingForm.firstChild);
+  } catch (e) { /* ignore */ }
+})();
 
 function updateEstimate() {
   var length = parseFloat(document.getElementById('boat-length').value) || 0;
@@ -235,11 +302,42 @@ function submitBooking(e) {
       + 'Please also send a photo of the boat and a location pin in the chat.';
   }
 
-  // Replace PHONE_NUMBER with the actual WhatsApp Business number
-  var waNumber = '31612345678'; // TODO: Replace with actual number
+  var contact = loadContact();
+  var waNumber = (contact && contact.whatsapp) ? contact.whatsapp : '31612345678';
   var url = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg);
   window.open(url, '_blank');
 }
+
+/* ===== Sync Pricing Display ===== */
+(function syncPricingDisplay() {
+  var r = loadRates();
+  /* Update pricing rows — find by label text and update the sibling value */
+  var rows = document.querySelectorAll('.pricing-row');
+  var map = {
+    'Exterieur Reiniging': r.exterior, 'Exterior Cleaning': r.exterior,
+    'Interieur Reiniging': r.interior, 'Interior Cleaning': r.interior,
+    'Complete Reiniging': r.full, 'Full Clean': r.full,
+    'Gesloten kajuitboot': r.closed, 'Closed cabin boat': r.closed,
+    'Canvas reiniging': r.canvas, 'Canvas cleaning': r.canvas,
+    'Teak / hout behandeling': r.teak, 'Teak / wood treatment': r.teak,
+    'Metaal polijsten': r.metal, 'Metal polishing': r.metal
+  };
+  rows.forEach(function (row) {
+    var label = row.querySelector('.pr-label');
+    var value = row.querySelector('.pr-value');
+    if (!label || !value) return;
+    var text = label.textContent.trim();
+    if (map[text] !== undefined) {
+      var v = map[text];
+      /* Rates (per m2) vs surcharges (flat) */
+      if (text.indexOf('Reiniging') !== -1 || text.indexOf('Cleaning') !== -1 || text.indexOf('Clean') !== -1) {
+        value.innerHTML = '&euro;' + v + ' / m&sup2;';
+      } else {
+        value.innerHTML = '+ &euro;' + v;
+      }
+    }
+  });
+})();
 
 /* ===== Water Canvas Animation ===== */
 (function () {
