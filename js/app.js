@@ -240,3 +240,122 @@ function submitBooking(e) {
   var url = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg);
   window.open(url, '_blank');
 }
+
+/* ===== Water Canvas Animation ===== */
+(function () {
+  var canvas = document.getElementById('water-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w, h, t = 0;
+  var bubbles = [];
+
+  function resize() {
+    var rect = canvas.parentElement.getBoundingClientRect();
+    w = canvas.width = rect.width;
+    h = canvas.height = rect.height;
+  }
+
+  // Create bubbles
+  function initBubbles() {
+    bubbles = [];
+    for (var i = 0; i < 20; i++) {
+      bubbles.push({
+        x: Math.random() * w,
+        y: h + Math.random() * h,
+        r: 2 + Math.random() * 6,
+        speed: 0.3 + Math.random() * 0.8,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: 0.01 + Math.random() * 0.02,
+        opacity: 0.15 + Math.random() * 0.3
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    t += 0.008;
+
+    // Draw multiple wave layers
+    drawWave(h * 0.35, 0.6, 80, 'rgba(21,101,192,0.12)', t);
+    drawWave(h * 0.45, 0.8, 60, 'rgba(13,71,161,0.10)', t * 1.2 + 1);
+    drawWave(h * 0.55, 1.0, 50, 'rgba(21,101,192,0.08)', t * 0.7 + 2);
+    drawWave(h * 0.65, 0.5, 40, 'rgba(100,181,246,0.06)', t * 1.5 + 3);
+    drawWave(h * 0.75, 0.9, 35, 'rgba(144,202,249,0.05)', t * 0.9 + 4);
+
+    // Draw caustic light spots
+    drawCaustics();
+
+    // Draw bubbles
+    drawBubbles();
+
+    requestAnimationFrame(draw);
+  }
+
+  function drawWave(baseY, speed, amplitude, color, offset) {
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (var x = 0; x <= w; x += 4) {
+      var y = baseY
+        + Math.sin(x * 0.003 + offset * speed) * amplitude * 0.5
+        + Math.sin(x * 0.006 + offset * speed * 1.3) * amplitude * 0.3
+        + Math.cos(x * 0.001 + offset * speed * 0.5) * amplitude * 0.2;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function drawCaustics() {
+    for (var i = 0; i < 8; i++) {
+      var cx = (Math.sin(t * 0.5 + i * 1.7) * 0.5 + 0.5) * w;
+      var cy = (Math.cos(t * 0.3 + i * 2.1) * 0.5 + 0.5) * h;
+      var r = 40 + Math.sin(t + i) * 20;
+      var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0, 'rgba(100,181,246,0.06)');
+      grad.addColorStop(1, 'rgba(100,181,246,0)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+  }
+
+  function drawBubbles() {
+    for (var i = 0; i < bubbles.length; i++) {
+      var b = bubbles[i];
+      b.y -= b.speed;
+      b.wobble += b.wobbleSpeed;
+      var bx = b.x + Math.sin(b.wobble) * 15;
+
+      // Reset when off screen
+      if (b.y < -b.r * 2) {
+        b.y = h + b.r * 2;
+        b.x = Math.random() * w;
+      }
+
+      // Draw bubble
+      var fadeIn = Math.min(1, (h - b.y) / (h * 0.2));
+      var fadeOut = Math.min(1, b.y / (h * 0.15));
+      var alpha = b.opacity * fadeIn * fadeOut;
+
+      ctx.beginPath();
+      ctx.arc(bx, b.y, b.r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,' + alpha + ')';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // Highlight
+      ctx.beginPath();
+      ctx.arc(bx - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,' + (alpha * 0.6) + ')';
+      ctx.fill();
+    }
+  }
+
+  window.addEventListener('resize', function () { resize(); initBubbles(); });
+  resize();
+  initBubbles();
+  draw();
+})();
