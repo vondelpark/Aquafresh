@@ -60,21 +60,12 @@ document.addEventListener('click', function (e) {
 });
 
 /* ===== Pricing Logic ===== */
-/* Defaults — overridden by admin panel via localStorage */
-var DEFAULT_RATES = {
-  exterior: 8, interior: 10, full: 15,
-  closed: 30, canvas: 25, teak: 40, metal: 35,
-  minExterior: 75, minInterior: 75, minFull: 125
+/* Matches WhatsApp bot: lib/pricing.js */
+var TIERS = {
+  basic:  { rate: 1.50, label: 'Basic' },
+  extra:  { rate: 2.00, label: 'Extra' },
+  heavy:  { rate: 2.50, label: 'Heavy Duty' }
 };
-
-function loadRates() {
-  try {
-    var saved = localStorage.getItem('aquafresh-pricing');
-    if (saved) return JSON.parse(saved);
-  } catch (e) { /* ignore */ }
-  return DEFAULT_RATES;
-}
-var RATES = loadRates();
 
 /* ===== Contact Info (admin-configurable) ===== */
 function loadContact() {
@@ -145,199 +136,175 @@ function loadContact() {
   } catch (e) { /* ignore */ }
 })();
 
+function getSelectedTier() {
+  var checked = document.querySelector('input[name="service-tier"]:checked');
+  return checked ? checked.value : 'extra';
+}
+
 function updateEstimate() {
   var length = parseFloat(document.getElementById('boat-length').value) || 0;
   var width = parseFloat(document.getElementById('boat-width').value) || 0;
-  var service = document.getElementById('service-type').value;
-  var boatType = document.getElementById('boat-type').value;
-  var canvas = document.getElementById('canvas').value;
-  var material = document.getElementById('material').value;
+  var tierKey = getSelectedTier();
+  var tier = TIERS[tierKey] || TIERS.extra;
 
-  var area = length * width;
-  var breakdown = [];
+  var area = Math.round(length * width * 10) / 10;
   var isNl = document.body.classList.contains('nl');
 
-  if (area <= 0 || !service) {
+  if (area <= 0) {
     document.getElementById('estimate-price').textContent = '--';
     document.getElementById('estimate-breakdown').innerHTML = '';
+    document.getElementById('estimate-area').textContent = '';
     return;
   }
 
-  // base rate
-  var rateKey = service;
-  var rate = RATES[rateKey] || RATES.exterior;
-  var base = area * rate;
-  var minKey = 'min' + service.charAt(0).toUpperCase() + service.slice(1);
-  var minPrice = RATES[minKey] || 75;
-  if (base < minPrice) base = minPrice;
+  var total = Math.round(area * tier.rate);
 
-  breakdown.push({
-    label: isNl
-      ? 'Basis (' + area.toFixed(1) + ' m\u00B2 \u00D7 \u20AC' + rate + ')'
-      : 'Base (' + area.toFixed(1) + ' m\u00B2 \u00D7 \u20AC' + rate + ')',
-    value: base
-  });
+  // Area note
+  document.getElementById('estimate-area').textContent =
+    length + 'm \u00D7 ' + width + 'm = ' + area + ' m\u00B2 \u00D7 \u20AC' + tier.rate.toFixed(2);
 
-  var total = base;
+  document.getElementById('estimate-price').textContent = '\u20AC' + total;
 
-  // surcharges
-  if (boatType === 'closed') {
-    total += RATES.closed;
-    breakdown.push({
-      label: isNl ? 'Gesloten boot toeslag' : 'Closed cabin surcharge',
-      value: RATES.closed
-    });
-  }
-  if (canvas === 'yes') {
-    total += RATES.canvas;
-    breakdown.push({
-      label: isNl ? 'Canvas reiniging' : 'Canvas cleaning',
-      value: RATES.canvas
-    });
-  }
-  if (material === 'teak') {
-    total += RATES.teak;
-    breakdown.push({
-      label: isNl ? 'Teak / hout behandeling' : 'Teak / wood treatment',
-      value: RATES.teak
-    });
-  }
-  if (material === 'metal') {
-    total += RATES.metal;
-    breakdown.push({
-      label: isNl ? 'Metaal polijsten' : 'Metal polishing',
-      value: RATES.metal
-    });
-  }
+  var html = '<div class="line"><span>' +
+    (isNl ? 'Oppervlak' : 'Area') + '</span><span>' + area + ' m\u00B2</span></div>' +
+    '<div class="line"><span>' + tier.label + ' (\u20AC' + tier.rate.toFixed(2) + '/m\u00B2)</span><span>\u00D7 ' + area + '</span></div>' +
+    '<div class="line"><span>' +
+    (isNl ? 'Totaal' : 'Total') + '</span><span>\u20AC' + total + '</span></div>';
 
-  // total line
-  breakdown.push({
-    label: isNl ? 'Geschatte prijs' : 'Estimated price',
-    value: total
-  });
-
-  document.getElementById('estimate-price').textContent = '\u20AC' + total.toFixed(0);
-
-  var html = '';
-  for (var i = 0; i < breakdown.length; i++) {
-    html += '<div class="line"><span>' + breakdown[i].label + '</span><span>\u20AC' + breakdown[i].value.toFixed(0) + '</span></div>';
-  }
   document.getElementById('estimate-breakdown').innerHTML = html;
 }
 
 /* Bind change events */
 document.addEventListener('DOMContentLoaded', function () {
-  var ids = ['boat-length', 'boat-width', 'service-type', 'boat-type', 'canvas', 'material'];
-  ids.forEach(function (id) {
+  ['boat-length', 'boat-width'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) {
       el.addEventListener('input', updateEstimate);
       el.addEventListener('change', updateEstimate);
     }
   });
+  document.querySelectorAll('input[name="service-tier"]').forEach(function (radio) {
+    radio.addEventListener('change', updateEstimate);
+  });
 });
 
-/* ===== Form Submission -> WhatsApp ===== */
+/* ===== Form Submission — WhatsApp or Online ===== */
 function submitBooking(e) {
   e.preventDefault();
 
   var name = document.getElementById('customer-name').value.trim();
   var phone = document.getElementById('customer-phone').value.trim();
-  var boatName = document.getElementById('boat-name').value.trim();
+  var email = document.getElementById('customer-email').value.trim();
   var location = document.getElementById('boat-location').value.trim();
   var date = document.getElementById('preferred-date').value;
   var time = document.getElementById('preferred-time').value;
   var length = document.getElementById('boat-length').value;
   var width = document.getElementById('boat-width').value;
-  var service = document.getElementById('service-type').value;
-  var boatType = document.getElementById('boat-type').value;
-  var canvas = document.getElementById('canvas').value;
-  var material = document.getElementById('material').value;
+  var tierKey = getSelectedTier();
+  var tier = TIERS[tierKey] || TIERS.extra;
   var notes = document.getElementById('notes').value.trim();
   var estimate = document.getElementById('estimate-price').textContent;
+  var method = document.getElementById('booking-method').value;
 
   var isNl = document.body.classList.contains('nl');
+  var area = (parseFloat(length) * parseFloat(width)).toFixed(1);
 
   // Validation
-  if (!name || !phone || !length || !width || !service) {
+  if (!name || !phone || !length || !width || !location || !date) {
     alert(isNl
       ? 'Vul alsjeblieft alle verplichte velden in.'
       : 'Please fill in all required fields.');
     return;
   }
 
-  // Build WhatsApp message
-  var msg;
-  if (isNl) {
-    msg = '*Nieuwe boeking - Aquafresh*\n\n'
-      + 'Naam: ' + name + '\n'
-      + 'Telefoon: ' + phone + '\n'
-      + 'Boot: ' + boatName + '\n'
-      + 'Locatie: ' + location + '\n'
-      + 'Datum: ' + date + ' ' + time + '\n'
-      + 'Lengte: ' + length + 'm\n'
-      + 'Breedte: ' + width + 'm\n'
-      + 'Service: ' + service + '\n'
-      + 'Type: ' + boatType + '\n'
-      + 'Canvas: ' + canvas + '\n'
-      + 'Materiaal: ' + material + '\n'
-      + 'Geschatte prijs: ' + estimate + '\n'
-      + 'Opmerkingen: ' + (notes || '-') + '\n\n'
-      + 'Stuur alsjeblieft een foto van de boot en een locatie-pin in het gesprek.';
-  } else {
-    msg = '*New Booking - Aquafresh*\n\n'
-      + 'Name: ' + name + '\n'
-      + 'Phone: ' + phone + '\n'
-      + 'Boat: ' + boatName + '\n'
-      + 'Location: ' + location + '\n'
-      + 'Date: ' + date + ' ' + time + '\n'
-      + 'Length: ' + length + 'm\n'
-      + 'Width: ' + width + 'm\n'
-      + 'Service: ' + service + '\n'
-      + 'Type: ' + boatType + '\n'
-      + 'Canvas: ' + canvas + '\n'
-      + 'Material: ' + material + '\n'
-      + 'Estimated price: ' + estimate + '\n'
-      + 'Notes: ' + (notes || '-') + '\n\n'
-      + 'Please also send a photo of the boat and a location pin in the chat.';
-  }
-
-  var contact = loadContact();
-  var waNumber = (contact && contact.whatsapp) ? contact.whatsapp : '31612345678';
-  var url = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg);
-  window.open(url, '_blank');
-}
-
-/* ===== Sync Pricing Display ===== */
-(function syncPricingDisplay() {
-  var r = loadRates();
-  /* Update pricing rows — find by label text and update the sibling value */
-  var rows = document.querySelectorAll('.pricing-row');
-  var map = {
-    'Exterieur Reiniging': r.exterior, 'Exterior Cleaning': r.exterior,
-    'Interieur Reiniging': r.interior, 'Interior Cleaning': r.interior,
-    'Complete Reiniging': r.full, 'Full Clean': r.full,
-    'Gesloten kajuitboot': r.closed, 'Closed cabin boat': r.closed,
-    'Canvas reiniging': r.canvas, 'Canvas cleaning': r.canvas,
-    'Teak / hout behandeling': r.teak, 'Teak / wood treatment': r.teak,
-    'Metaal polijsten': r.metal, 'Metal polishing': r.metal
-  };
-  rows.forEach(function (row) {
-    var label = row.querySelector('.pr-label');
-    var value = row.querySelector('.pr-value');
-    if (!label || !value) return;
-    var text = label.textContent.trim();
-    if (map[text] !== undefined) {
-      var v = map[text];
-      /* Rates (per m2) vs surcharges (flat) */
-      if (text.indexOf('Reiniging') !== -1 || text.indexOf('Cleaning') !== -1 || text.indexOf('Clean') !== -1) {
-        value.innerHTML = '&euro;' + v + ' / m&sup2;';
-      } else {
-        value.innerHTML = '+ &euro;' + v;
-      }
+  if (method === 'whatsapp') {
+    // Build WhatsApp message matching the bot format
+    var msg;
+    if (isNl) {
+      msg = '*Nieuwe boeking - Aquafresh Boats*\n\n'
+        + '\ud83d\udc64 Naam: ' + name + '\n'
+        + '\ud83d\udcde Telefoon: ' + phone + '\n'
+        + (email ? '\ud83d\udce7 Email: ' + email + '\n' : '')
+        + '\ud83d\udea4 Boot: ' + length + 'm \u00D7 ' + width + 'm (' + area + ' m\u00B2)\n'
+        + '\ud83e\uddf9 Pakket: *' + tier.label + '* (\u20AC' + tier.rate.toFixed(2) + '/m\u00B2)\n'
+        + '\ud83d\udcc5 Datum: ' + date + '\n'
+        + '\ud83d\udd50 Tijd: ' + time + '\n'
+        + '\ud83d\udccd Locatie: ' + location + '\n'
+        + '\ud83d\udcb0 Geschatte prijs: ' + estimate + '\n'
+        + (notes ? '\ud83d\udcdd Opmerkingen: ' + notes + '\n' : '')
+        + '\nStuur alsjeblieft een foto van de boot en een locatie-pin.';
+    } else {
+      msg = '*New Booking - Aquafresh Boats*\n\n'
+        + '\ud83d\udc64 Name: ' + name + '\n'
+        + '\ud83d\udcde Phone: ' + phone + '\n'
+        + (email ? '\ud83d\udce7 Email: ' + email + '\n' : '')
+        + '\ud83d\udea4 Boat: ' + length + 'm \u00D7 ' + width + 'm (' + area + ' m\u00B2)\n'
+        + '\ud83e\uddf9 Package: *' + tier.label + '* (\u20AC' + tier.rate.toFixed(2) + '/m\u00B2)\n'
+        + '\ud83d\udcc5 Date: ' + date + '\n'
+        + '\ud83d\udd50 Time: ' + time + '\n'
+        + '\ud83d\udccd Location: ' + location + '\n'
+        + '\ud83d\udcb0 Estimated price: ' + estimate + '\n'
+        + (notes ? '\ud83d\udcdd Notes: ' + notes + '\n' : '')
+        + '\nPlease send a photo of the boat and a location pin.';
     }
-  });
-})();
+
+    var contact = loadContact();
+    var waNumber = (contact && contact.whatsapp) ? contact.whatsapp : '31612345678';
+    var url = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank');
+
+  } else {
+    // Online booking — POST to /api/booking
+    var booking = {
+      customer_name: name,
+      phone_number: phone,
+      email: email,
+      boat_length_m: parseFloat(length),
+      boat_width_m: parseFloat(width),
+      estimated_area_m2: parseFloat(area),
+      service_tier: tierKey,
+      tier_label: tier.label,
+      price_per_m2: tier.rate,
+      quoted_amount_eur: parseInt(estimate.replace(/[^\d]/g, '')) || 0,
+      preferred_date: date,
+      preferred_time: time,
+      boat_location: location,
+      notes: notes,
+      language: isNl ? 'nl' : 'en'
+    };
+
+    var submitBtn = document.querySelector('.method-online');
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.6';
+
+    fetch('/api/booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(booking)
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data.booking_id) {
+        var confirmMsg = isNl
+          ? 'Boeking ontvangen! Uw boekingsnummer is ' + data.booking_id + '. We nemen zo snel mogelijk contact met u op ter bevestiging.'
+          : 'Booking received! Your booking number is ' + data.booking_id + '. We will contact you shortly to confirm.';
+        alert(confirmMsg);
+        e.target.reset();
+        document.querySelector('input[name="service-tier"][value="extra"]').checked = true;
+        updateEstimate();
+      } else {
+        alert(isNl ? 'Er ging iets mis. Probeer het via WhatsApp.' : 'Something went wrong. Please try via WhatsApp.');
+      }
+    })
+    .catch(function () {
+      alert(isNl ? 'Verbinding mislukt. Probeer het via WhatsApp.' : 'Connection failed. Please try via WhatsApp.');
+    })
+    .finally(function () {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+    });
+  }
+}
 
 /* ===== Water Canvas Animation ===== */
 (function () {

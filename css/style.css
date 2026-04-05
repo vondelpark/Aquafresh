@@ -952,6 +952,172 @@ footer::before {
 }
 .wa-float:hover::after { opacity: 1; }
 
+/* ===== Service Price Tags ===== */
+.service-price {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 14px;
+  letter-spacing: -.02em;
+}
+.service-price span {
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--grey-500);
+}
+
+/* ===== 3-Column Pricing Grid ===== */
+.pricing-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 100%;
+}
+@media (max-width: 800px) {
+  .pricing-grid-3 { grid-template-columns: 1fr; }
+}
+.pricing-highlight {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--blue);
+  padding: 20px 28px 8px;
+  letter-spacing: -.02em;
+}
+.pricing-highlight span {
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--grey-500);
+}
+.pricing-card-featured {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 1px var(--blue), var(--shadow-lg);
+  position: relative;
+}
+
+/* ===== Tier Selector (Booking Form) ===== */
+.tier-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+@media (max-width: 600px) {
+  .tier-selector { grid-template-columns: 1fr; }
+}
+.tier-option input { display: none; }
+.tier-card {
+  border: 2px solid var(--grey-200);
+  border-radius: var(--radius-sm);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s var(--ease);
+  position: relative;
+}
+.tier-card:hover {
+  border-color: var(--grey-300);
+  background: var(--grey-50);
+}
+.tier-option input:checked + .tier-card {
+  border-color: var(--blue);
+  background: rgba(21,101,192,.04);
+  box-shadow: 0 0 0 1px var(--blue);
+}
+.tier-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--grey-900);
+  margin-bottom: 4px;
+}
+.tier-rate {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+.tier-desc {
+  font-size: .82rem;
+  color: var(--grey-500);
+}
+.tier-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--blue);
+  color: var(--white);
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 2px 12px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ===== Form Step Labels ===== */
+.form-step-label {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--blue-light);
+  margin: 32px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--grey-100);
+}
+.form-step-label:first-child { margin-top: 0; }
+
+/* ===== Booking Method Grid ===== */
+.booking-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+@media (max-width: 600px) {
+  .booking-method-grid { grid-template-columns: 1fr; }
+}
+.booking-method-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .3s var(--ease-spring);
+  border: 2px solid;
+  text-align: center;
+}
+.booking-method-btn small {
+  font-size: .78rem;
+  font-weight: 400;
+  opacity: .7;
+}
+.booking-method-btn:hover {
+  transform: translateY(-3px);
+}
+.method-wa {
+  background: var(--green-wa);
+  border-color: var(--green-wa);
+  color: var(--white);
+}
+.method-wa:hover {
+  background: var(--green-wa-dark);
+  border-color: var(--green-wa-dark);
+  box-shadow: 0 8px 28px rgba(37,211,102,.3);
+}
+.method-online {
+  background: var(--white);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.method-online:hover {
+  background: rgba(21,101,192,.04);
+  box-shadow: 0 8px 28px rgba(10,61,145,.15);
+}
+
 /* ===== Admin Link ===== */
 .admin-link {
   font-size: .7rem;
