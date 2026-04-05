@@ -20,8 +20,8 @@ var DEFAULT_PRICING = {
 
 var DEFAULT_CONTACT = {
   email: 'aquafreshboats@gmail.com',
-  phone: '+31 6 1234 5678',
-  whatsapp: '31612345678',
+  phone: '+31 6 1951 1991',
+  whatsapp: '31619511991',
   location: 'Amsterdam, Nederland'
 };
 

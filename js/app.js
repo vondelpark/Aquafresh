@@ -249,7 +249,7 @@ function submitBooking(e) {
     }
 
     var contact = loadContact();
-    var waNumber = (contact && contact.whatsapp) ? contact.whatsapp : '31612345678';
+    var waNumber = (contact && contact.whatsapp) ? contact.whatsapp : '31619511991';
     var url = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(msg);
     window.open(url, '_blank');
 
