@@ -8,7 +8,7 @@ This guide walks you through connecting the WhatsApp booking bot to your Vercel 
 Customer (WhatsApp) → Meta Cloud API → Vercel /api/webhook → Conversation Engine
                                                               ├── Upstash Redis (state & bookings)
                                                               ├── Google Calendar (availability)
-                                                              └── Tikkie API (payments)
+                                                              └── Revolut API (payments)
 ```
 
 ## Prerequisites
@@ -17,7 +17,7 @@ Customer (WhatsApp) → Meta Cloud API → Vercel /api/webhook → Conversation 
 - Meta Business account + WhatsApp Business API access
 - Upstash Redis account (free tier works)
 - Google Cloud service account (for Calendar)
-- ABN AMRO Tikkie Business account (for payments)
+- Revolut Business account (for payment links)
 
 ---
 
@@ -70,22 +70,24 @@ Customer (WhatsApp) → Meta Cloud API → Vercel /api/webhook → Conversation 
    ```
    > **Note**: When pasting the private key in Vercel, keep `\n` as literal characters — the code converts them.
 
-## Step 4: Tikkie Payments
+## Step 4: Revolut Payments
 
-1. Go to [developer.abnamro.com](https://developer.abnamro.com)
-2. Register and subscribe to the **Tikkie API** product
-3. Create an app and get your:
-   - **API Key**
-   - **App Token** (from Tikkie portal)
-4. Set up the payment notification webhook in Tikkie:
-   - **URL**: `https://aquafreshboats.nl/api/tikkie-callback`
-5. Add to Vercel Environment Variables:
+1. Sign up for a **Revolut Business** account at [business.revolut.com](https://business.revolut.com)
+2. Go to **Developer** → **API Settings** in your Revolut Business dashboard
+3. Generate an **API Secret Key** (Merchant API)
+4. Set up the payment webhook in the Revolut dashboard:
+   - **URL**: `https://aquafreshboats.nl/api/revolut-callback`
+   - Subscribe to: `ORDER_COMPLETED`, `ORDER_CANCELLED`
+5. Copy the **Webhook Secret** for signature verification
+6. Add to Vercel Environment Variables:
    ```
-   TIKKIE_API_KEY=your-api-key
-   TIKKIE_APP_TOKEN=your-app-token
-   TIKKIE_SANDBOX=false
+   REVOLUT_API_SECRET_KEY=your-api-secret-key
+   REVOLUT_WEBHOOK_SECRET=your-webhook-signing-secret
+   REVOLUT_SANDBOX=false
    ```
-   > Set `TIKKIE_SANDBOX=true` to test with sandbox API first.
+   > Set `REVOLUT_SANDBOX=true` to test with the Revolut sandbox API first.
+
+**Sandbox testing**: Use [sandbox-merchant.revolut.com](https://sandbox-merchant.revolut.com) for test credentials. Generate sandbox API keys from the Revolut Business sandbox portal.
 
 ---
 
@@ -102,11 +104,12 @@ Customer (WhatsApp) → Meta Cloud API → Vercel /api/webhook → Conversation 
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Optional | Google service account email |
 | `GOOGLE_PRIVATE_KEY` | Optional | Google service account private key |
 | `GOOGLE_CALENDAR_ID` | Optional | Google Calendar ID (default: primary) |
-| `TIKKIE_API_KEY` | Optional | ABN AMRO Tikkie API key |
-| `TIKKIE_APP_TOKEN` | Optional | Tikkie app token |
-| `TIKKIE_SANDBOX` | Optional | Set "true" for sandbox mode |
+| `REVOLUT_API_SECRET_KEY` | Optional | Revolut Merchant API secret key |
+| `REVOLUT_WEBHOOK_SECRET` | Optional | Revolut webhook signing secret |
+| `REVOLUT_SANDBOX` | Optional | Set "true" for sandbox mode |
+| `OWNER_PHONE` | Optional | Owner's WhatsApp number (for notifications) |
 
-> Google Calendar and Tikkie are optional — the bot works without them (calendar events won't be created, and you'll need to send Tikkie links manually).
+> Google Calendar and Revolut are optional — the bot works without them (calendar events won't be created, and you'll need to send payment links manually).
 
 ---
 
@@ -120,21 +123,22 @@ Configured in `lib/pricing.js`:
 | Extra | €2.00/m² | Includes teak and harder-to-clean areas |
 | Heavy Duty | €2.50/m² | Deep cleaning for stubborn dirt |
 
-**Formula**: `boat_length × 2.5 (area factor) × rate_per_m²`
+**Formula**: `boat_length × boat_width × rate_per_m²`
 
 ---
 
 ## WhatsApp Conversation Flow
 
 1. Customer sends any message → Bot greets and asks for boat length
-2. Bot asks for service tier (interactive buttons: Basic / Extra / Heavy Duty)
-3. Bot asks for preferred date
-4. Bot asks for preferred time (buttons: Morning / Afternoon / Flexible)
-5. Bot asks for boat location
-6. Bot asks for customer name
-7. Bot calculates and sends quote with summary → asks for confirmation (buttons)
-8. On confirm: creates Google Calendar event + Tikkie link → sends to customer
-9. Tikkie callback updates booking status → sends final WhatsApp confirmation
+2. Bot asks for boat width → calculates area
+3. Bot asks for service tier (interactive buttons: Basic / Extra / Heavy Duty)
+4. Bot asks for preferred date
+5. Bot asks for preferred time (buttons: Morning / Afternoon / Flexible)
+6. Bot asks for boat location (WhatsApp location pin or text)
+7. Bot asks for customer name
+8. Bot calculates and sends quote with summary → asks for confirmation (buttons)
+9. On confirm: creates Google Calendar event + Revolut payment link → sends to customer
+10. Revolut callback updates booking status → sends final WhatsApp confirmation
 
 **Commands**: "diensten" (service info), "reset" (start over), "status" (check booking)
 

@@ -1,7 +1,7 @@
 # Aquafresh WhatsApp Business Quick Reply Templates
 
 Copy-paste these into your WhatsApp Business quick replies settings.
-Replace `[FORM LINK]` with your website URL and `[TIKKIE LINK]` with each customer's Tikkie link.
+Replace `[FORM LINK]` with your website URL and `[PAYMENT LINK]` with each customer's Revolut payment link.
 
 ---
 
@@ -36,7 +36,7 @@ Or send us the following directly:
 • Your preferred date/time
 • Exact boat location pin 📍
 
-We'll calculate the estimate and send your booking confirmation + Tikkie payment link.
+We'll calculate the estimate and send your booking confirmation + payment link.
 ```
 
 ### /pin
@@ -53,7 +53,7 @@ Please send the exact boat location as a WhatsApp pin:
 Your booking is reserved! ✅
 
 Please complete payment here:
-💰 [TIKKIE LINK]
+💰 [PAYMENT LINK]
 
 Once paid, we'll confirm your appointment.
 ```
@@ -114,7 +114,7 @@ Of stuur ons direct het volgende:
 • Gewenste datum/tijd
 • Exacte locatie-pin van de boot 📍
 
-Daarna sturen we de prijsindicatie, afspraakbevestiging en Tikkie-betaallink.
+Daarna sturen we de prijsindicatie, afspraakbevestiging en betaallink.
 ```
 
 ### /pin
@@ -131,7 +131,7 @@ Stuur alsjeblieft de exacte locatie van de boot als WhatsApp-pin:
 Je afspraak is voorlopig gereserveerd! ✅
 
 Rond de betaling hier af:
-💰 [TIKKIE LINK]
+💰 [PAYMENT LINK]
 
 Na betaling bevestigen we de afspraak.
 ```
@@ -176,11 +176,11 @@ Bedankt voor het kiezen van Aquafresh. Tot de volgende keer! 🚤
 4. Go to Settings > Business Tools > Quick Replies
 5. Add each template above as a quick reply with the shortcut names shown (e.g., /menu, /quote, etc.)
 
-### Tikkie Setup
-1. Download Tikkie Zakelijk (Business) from the App Store / Play Store
-2. Register with ABN AMRO, ING, or Rabobank account
-3. For each booking, create a Tikkie payment request for the agreed amount
-4. Share the Tikkie link via WhatsApp using the /pay template
+### Revolut Setup
+1. Sign up for a **Revolut Business** account at [business.revolut.com](https://business.revolut.com)
+2. Go to **Developer** → **API Settings** to get your API keys
+3. Payment links are generated automatically by the bot when a booking is confirmed
+4. Customers pay via credit/debit card or Apple/Google Pay through the Revolut checkout
 
 ### Booking Workflow
 1. Customer contacts via WhatsApp → send /menu
@@ -188,6 +188,6 @@ Bedankt voor het kiezen van Aquafresh. Tot de volgende keer! 🚤
 3. Customer fills in form → booking details arrive via WhatsApp
 4. Review photo and details → confirm or adjust price
 5. Send /confirm with booking details
-6. Send /pay with Tikkie link
+6. Send /pay with Revolut payment link
 7. Payment received → update confirmation
 8. Clean the boat → send /done with photos

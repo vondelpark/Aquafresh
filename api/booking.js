@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
       language: data.language || 'nl',
       booking_status: 'Booked - Pending Confirmation',
       payment_status: 'Pending',
-      tikkie_url: null,
+      payment_url: null,
       calendar_event_id: null,
     };
 
