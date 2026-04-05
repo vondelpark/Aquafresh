@@ -1,0 +1,12 @@
+{
+  "name": "aquafresh-boats",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aquafresh Boats - Website & WhatsApp Business Booking API",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.28.0"
+  }
+}
