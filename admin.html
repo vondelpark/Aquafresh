@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Aquafresh</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230A3D91'/><text x='5' y='23' font-family='Inter,Arial' font-weight='800' font-size='20' fill='white'>A</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">A</div>
+    <h1>Aquafresh Admin</h1>
+    <p>Sign in to manage your site settings.</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="admin@aquafreshboats.nl" required>
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="Password" required>
+      </div>
+      <div id="login-error" class="login-error"></div>
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard" class="dashboard hidden">
+  <!-- Top bar -->
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <div class="admin-brand">
+        <span class="admin-logo">A</span>
+        <span>Aquafresh Admin</span>
+      </div>
+      <div class="admin-header-right">
+        <span class="admin-user">admin@aquafreshboats.nl</span>
+        <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav>
+        <button class="sidebar-link active" data-panel="pricing" onclick="showPanel('pricing')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Pricing
+        </button>
+        <button class="sidebar-link" data-panel="contact" onclick="showPanel('contact')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Contact &amp; Email
+        </button>
+        <button class="sidebar-link" data-panel="calendar" onclick="showPanel('calendar')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Calendar
+        </button>
+      </nav>
+      <a href="index.html" class="sidebar-back">&larr; Back to site</a>
+    </aside>
+
+    <!-- Main content -->
+    <main class="admin-main">
+
+      <!-- PRICING PANEL -->
+      <section id="panel-pricing" class="panel active">
+        <div class="panel-header">
+          <h2>Pricing Settings</h2>
+          <p>Manage service rates, surcharges, and minimum prices. Changes are applied instantly to the booking form.</p>
+        </div>
+
+        <div class="card">
+          <h3>Service Rates <span class="card-badge">per m&sup2;</span></h3>
+          <div class="field-row">
+            <div class="field">
+              <label for="rate-exterior">Exterior Cleaning</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-exterior" min="0" step="0.5"></div>
+            </div>
+            <div class="field">
+              <label for="rate-interior">Interior Cleaning</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-interior" min="0" step="0.5"></div>
+            </div>
+            <div class="field">
+              <label for="rate-full">Full Clean</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-full" min="0" step="0.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Surcharges <span class="card-badge">flat fee</span></h3>
+          <div class="field-row">
+            <div class="field">
+              <label for="surcharge-closed">Closed Cabin</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-closed" min="0" step="1"></div>
+            </div>
+            <div class="field">
+              <label for="surcharge-canvas">Canvas Cleaning</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-canvas" min="0" step="1"></div>
+            </div>
+            <div class="field">
+              <label for="surcharge-teak">Teak / Wood</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-teak" min="0" step="1"></div>
+            </div>
+            <div class="field">
+              <label for="surcharge-metal">Metal Polishing</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-metal" min="0" step="1"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Minimum Prices</h3>
+          <div class="field-row">
+            <div class="field">
+              <label for="min-exterior">Exterior Minimum</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="min-exterior" min="0" step="5"></div>
+            </div>
+            <div class="field">
+              <label for="min-interior">Interior Minimum</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="min-interior" min="0" step="5"></div>
+            </div>
+            <div class="field">
+              <label for="min-full">Full Clean Minimum</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="min-full" min="0" step="5"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn-save" onclick="savePricing()">Save Pricing</button>
+          <button class="btn-reset" onclick="resetPricing()">Reset to Defaults</button>
+          <span id="pricing-status" class="save-status"></span>
+        </div>
+      </section>
+
+      <!-- CONTACT PANEL -->
+      <section id="panel-contact" class="panel">
+        <div class="panel-header">
+          <h2>Contact &amp; Email Settings</h2>
+          <p>Manage the email address, phone number, and WhatsApp number displayed on the site.</p>
+        </div>
+
+        <div class="card">
+          <h3>Contact Details</h3>
+          <div class="field-row">
+            <div class="field">
+              <label for="contact-email">Email Address</label>
+              <input type="email" id="contact-email" placeholder="aquafreshboats@gmail.com">
+            </div>
+            <div class="field">
+              <label for="contact-phone">Phone Number</label>
+              <input type="tel" id="contact-phone" placeholder="+31 6 1951 1991">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="contact-whatsapp">WhatsApp Number <span class="field-hint">(digits only, with country code)</span></label>
+              <input type="text" id="contact-whatsapp" placeholder="31619511991">
+            </div>
+            <div class="field">
+              <label for="contact-location">Location</label>
+              <input type="text" id="contact-location" placeholder="Amsterdam, Nederland">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn-save" onclick="saveContact()">Save Contact Info</button>
+          <span id="contact-status" class="save-status"></span>
+        </div>
+      </section>
+
+      <!-- CALENDAR PANEL -->
+      <section id="panel-calendar" class="panel">
+        <div class="panel-header">
+          <h2>Google Calendar Integration</h2>
+          <p>Link your Google Calendar to show availability on the booking form. Customers will see when you have open slots.</p>
+        </div>
+
+        <div class="card">
+          <h3>Setup Instructions</h3>
+          <ol class="instructions">
+            <li>Go to <strong>Google Calendar</strong> on your computer.</li>
+            <li>Click the <strong>gear icon</strong> &rarr; <strong>Settings</strong>.</li>
+            <li>Under "Settings for my calendars", click on your <strong>Aquafresh calendar</strong>.</li>
+            <li>Scroll to <strong>"Integrate calendar"</strong> and copy the <strong>Calendar ID</strong> (e.g. <code>abc123@group.calendar.google.com</code>).</li>
+            <li>For the public embed, scroll to <strong>"Access permissions"</strong> and check <strong>"Make available to public"</strong>.</li>
+            <li>Paste your Calendar ID below.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3>Calendar Settings</h3>
+          <div class="field">
+            <label for="calendar-id">Google Calendar ID</label>
+            <input type="text" id="calendar-id" placeholder="aquafreshboats@gmail.com">
+          </div>
+          <div class="field">
+            <label for="calendar-api-key">Google API Key <span class="field-hint">(for embedding, optional)</span></label>
+            <input type="text" id="calendar-api-key" placeholder="AIzaSy...">
+          </div>
+          <div class="field" style="margin-top:16px;">
+            <label class="toggle-label">
+              <input type="checkbox" id="calendar-enabled">
+              <span class="toggle-switch"></span>
+              Show availability calendar on booking page
+            </label>
+          </div>
+        </div>
+
+        <div id="calendar-preview-container" class="card" style="display:none;">
+          <h3>Calendar Preview</h3>
+          <div id="calendar-preview" class="calendar-embed"></div>
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn-save" onclick="saveCalendar()">Save Calendar Settings</button>
+          <button class="btn-secondary" onclick="previewCalendar()">Preview Calendar</button>
+          <span id="calendar-status" class="save-status"></span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>
