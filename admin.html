@@ -75,63 +75,27 @@
       <section id="panel-pricing" class="panel active">
         <div class="panel-header">
           <h2>Pricing Settings</h2>
-          <p>Manage service rates, surcharges, and minimum prices. Changes are applied instantly to the booking form.</p>
+          <p>Manage service tier rates per m&sup2;. Changes are applied instantly to the website booking form.</p>
         </div>
 
         <div class="card">
-          <h3>Service Rates <span class="card-badge">per m&sup2;</span></h3>
+          <h3>Service Tiers <span class="card-badge">per m&sup2;</span></h3>
+          <p style="font-size:.85rem;color:#64748B;margin-bottom:16px;">Price = boat length &times; boat width &times; rate per m&sup2;</p>
           <div class="field-row">
             <div class="field">
-              <label for="rate-exterior">Exterior Cleaning</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-exterior" min="0" step="0.5"></div>
+              <label for="rate-basic">Basic</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-basic" min="0" step="0.10"></div>
+              <span class="field-hint">Standard cleaning</span>
             </div>
             <div class="field">
-              <label for="rate-interior">Interior Cleaning</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-interior" min="0" step="0.5"></div>
+              <label for="rate-extra">Extra</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-extra" min="0" step="0.10"></div>
+              <span class="field-hint">Includes teak &amp; hard-to-reach areas</span>
             </div>
             <div class="field">
-              <label for="rate-full">Full Clean</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-full" min="0" step="0.5"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Surcharges <span class="card-badge">flat fee</span></h3>
-          <div class="field-row">
-            <div class="field">
-              <label for="surcharge-closed">Closed Cabin</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-closed" min="0" step="1"></div>
-            </div>
-            <div class="field">
-              <label for="surcharge-canvas">Canvas Cleaning</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-canvas" min="0" step="1"></div>
-            </div>
-            <div class="field">
-              <label for="surcharge-teak">Teak / Wood</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-teak" min="0" step="1"></div>
-            </div>
-            <div class="field">
-              <label for="surcharge-metal">Metal Polishing</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="surcharge-metal" min="0" step="1"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Minimum Prices</h3>
-          <div class="field-row">
-            <div class="field">
-              <label for="min-exterior">Exterior Minimum</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="min-exterior" min="0" step="5"></div>
-            </div>
-            <div class="field">
-              <label for="min-interior">Interior Minimum</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="min-interior" min="0" step="5"></div>
-            </div>
-            <div class="field">
-              <label for="min-full">Full Clean Minimum</label>
-              <div class="input-prefix"><span>&euro;</span><input type="number" id="min-full" min="0" step="5"></div>
+              <label for="rate-heavy">Heavy Duty</label>
+              <div class="input-prefix"><span>&euro;</span><input type="number" id="rate-heavy" min="0" step="0.10"></div>
+              <span class="field-hint">Deep cleaning for stubborn dirt</span>
             </div>
           </div>
         </div>

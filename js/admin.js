@@ -4,18 +4,11 @@
 var ADMIN_EMAIL = 'admin@aquafreshboats.nl';
 var ADMIN_PASS = 'admin 123';
 
-/* --- Default pricing (matches app.js RATES) --- */
+/* --- Default pricing (matches app.js TIERS and lib/pricing.js) --- */
 var DEFAULT_PRICING = {
-  exterior: 8,
-  interior: 10,
-  full: 15,
-  closed: 30,
-  canvas: 25,
-  teak: 40,
-  metal: 35,
-  minExterior: 75,
-  minInterior: 75,
-  minFull: 125
+  basic: 1.50,
+  extra: 2.00,
+  heavy: 2.50
 };
 
 var DEFAULT_CONTACT = {
@@ -92,30 +85,16 @@ function loadPricing() {
   var saved = localStorage.getItem('aquafresh-pricing');
   var data = saved ? JSON.parse(saved) : DEFAULT_PRICING;
 
-  document.getElementById('rate-exterior').value = data.exterior;
-  document.getElementById('rate-interior').value = data.interior;
-  document.getElementById('rate-full').value = data.full;
-  document.getElementById('surcharge-closed').value = data.closed;
-  document.getElementById('surcharge-canvas').value = data.canvas;
-  document.getElementById('surcharge-teak').value = data.teak;
-  document.getElementById('surcharge-metal').value = data.metal;
-  document.getElementById('min-exterior').value = data.minExterior;
-  document.getElementById('min-interior').value = data.minInterior;
-  document.getElementById('min-full').value = data.minFull;
+  document.getElementById('rate-basic').value = data.basic;
+  document.getElementById('rate-extra').value = data.extra;
+  document.getElementById('rate-heavy').value = data.heavy;
 }
 
 function savePricing() {
   var data = {
-    exterior: parseFloat(document.getElementById('rate-exterior').value) || 0,
-    interior: parseFloat(document.getElementById('rate-interior').value) || 0,
-    full: parseFloat(document.getElementById('rate-full').value) || 0,
-    closed: parseFloat(document.getElementById('surcharge-closed').value) || 0,
-    canvas: parseFloat(document.getElementById('surcharge-canvas').value) || 0,
-    teak: parseFloat(document.getElementById('surcharge-teak').value) || 0,
-    metal: parseFloat(document.getElementById('surcharge-metal').value) || 0,
-    minExterior: parseFloat(document.getElementById('min-exterior').value) || 0,
-    minInterior: parseFloat(document.getElementById('min-interior').value) || 0,
-    minFull: parseFloat(document.getElementById('min-full').value) || 0
+    basic: parseFloat(document.getElementById('rate-basic').value) || 0,
+    extra: parseFloat(document.getElementById('rate-extra').value) || 0,
+    heavy: parseFloat(document.getElementById('rate-heavy').value) || 0
   };
   localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
   flashStatus('pricing-status', 'Pricing saved!');
