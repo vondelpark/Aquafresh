@@ -60,12 +60,37 @@ document.addEventListener('click', function (e) {
 });
 
 /* ===== Pricing Logic ===== */
-/* Matches WhatsApp bot: lib/pricing.js */
+/* Loads from localStorage first for instant display, then syncs from API */
 var TIERS = {
   basic:  { rate: 1.50, label: 'Basic' },
   extra:  { rate: 2.00, label: 'Extra' },
   heavy:  { rate: 2.50, label: 'Heavy Duty' }
 };
+
+(function loadTiers() {
+  // Instant load from localStorage
+  try {
+    var saved = localStorage.getItem('aquafresh-pricing');
+    if (saved) {
+      var p = JSON.parse(saved);
+      if (p.basic) TIERS.basic.rate = p.basic;
+      if (p.extra) TIERS.extra.rate = p.extra;
+      if (p.heavy) TIERS.heavy.rate = p.heavy;
+    }
+  } catch (e) { /* ignore */ }
+
+  // Then fetch latest from API and update
+  fetch('/api/pricing')
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data.basic) TIERS.basic.rate = data.basic;
+      if (data.extra) TIERS.extra.rate = data.extra;
+      if (data.heavy) TIERS.heavy.rate = data.heavy;
+      localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+      updateEstimate();
+    })
+    .catch(function () { /* use localStorage values */ });
+})();
 
 /* ===== Contact Info (admin-configurable) ===== */
 function loadContact() {
