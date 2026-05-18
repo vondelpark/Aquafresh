@@ -82,12 +82,24 @@ function flashStatus(id, msg) {
 
 /* ===== Pricing ===== */
 function loadPricing() {
-  var saved = localStorage.getItem('aquafresh-pricing');
-  var data = saved ? JSON.parse(saved) : DEFAULT_PRICING;
-
-  document.getElementById('rate-basic').value = data.basic;
-  document.getElementById('rate-extra').value = data.extra;
-  document.getElementById('rate-heavy').value = data.heavy;
+  // Load from API (Redis), fall back to localStorage, then defaults
+  fetch('/api/pricing')
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      document.getElementById('rate-basic').value = data.basic;
+      document.getElementById('rate-extra').value = data.extra;
+      document.getElementById('rate-heavy').value = data.heavy;
+      // Keep localStorage in sync for the website booking form
+      localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+    })
+    .catch(function () {
+      // Offline fallback
+      var saved = localStorage.getItem('aquafresh-pricing');
+      var data = saved ? JSON.parse(saved) : DEFAULT_PRICING;
+      document.getElementById('rate-basic').value = data.basic;
+      document.getElementById('rate-extra').value = data.extra;
+      document.getElementById('rate-heavy').value = data.heavy;
+    });
 }
 
 function savePricing() {
@@ -96,13 +108,49 @@ function savePricing() {
     extra: parseFloat(document.getElementById('rate-extra').value) || 0,
     heavy: parseFloat(document.getElementById('rate-heavy').value) || 0
   };
-  localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
-  flashStatus('pricing-status', 'Pricing saved!');
+
+  // Save to API (Redis) — this is what the WhatsApp bot reads
+  fetch('/api/pricing', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Key': ADMIN_PASS
+    },
+    body: JSON.stringify(data)
+  })
+  .then(function (res) { return res.json(); })
+  .then(function (result) {
+    if (result.status === 'saved') {
+      // Also save to localStorage for the website booking form
+      localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+      flashStatus('pricing-status', 'Pricing saved!');
+    } else {
+      flashStatus('pricing-status', 'Error: ' + (result.error || 'unknown'));
+    }
+  })
+  .catch(function () {
+    // Save to localStorage as fallback
+    localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+    flashStatus('pricing-status', 'Saved locally (server unavailable).');
+  });
 }
 
 function resetPricing() {
-  localStorage.removeItem('aquafresh-pricing');
-  loadPricing();
+  var data = DEFAULT_PRICING;
+  // Reset on server
+  fetch('/api/pricing', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Key': ADMIN_PASS
+    },
+    body: JSON.stringify(data)
+  }).catch(function () {});
+
+  localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+  document.getElementById('rate-basic').value = data.basic;
+  document.getElementById('rate-extra').value = data.extra;
+  document.getElementById('rate-heavy').value = data.heavy;
   flashStatus('pricing-status', 'Reset to defaults.');
 }
 
