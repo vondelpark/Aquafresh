@@ -82,24 +82,28 @@ function flashStatus(id, msg) {
 
 /* ===== Pricing ===== */
 function loadPricing() {
-  // Load from API (Redis), fall back to localStorage, then defaults
+  // Load from localStorage immediately so fields are never empty
+  var saved = localStorage.getItem('aquafresh-pricing');
+  var local = saved ? JSON.parse(saved) : DEFAULT_PRICING;
+  document.getElementById('rate-basic').value = local.basic;
+  document.getElementById('rate-extra').value = local.extra;
+  document.getElementById('rate-heavy').value = local.heavy;
+
+  // Then try to sync from API (Redis) if available
   fetch('/api/pricing')
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      document.getElementById('rate-basic').value = data.basic;
-      document.getElementById('rate-extra').value = data.extra;
-      document.getElementById('rate-heavy').value = data.heavy;
-      // Keep localStorage in sync for the website booking form
-      localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+    .then(function (res) {
+      if (!res.ok) throw new Error('API error');
+      return res.json();
     })
-    .catch(function () {
-      // Offline fallback
-      var saved = localStorage.getItem('aquafresh-pricing');
-      var data = saved ? JSON.parse(saved) : DEFAULT_PRICING;
-      document.getElementById('rate-basic').value = data.basic;
-      document.getElementById('rate-extra').value = data.extra;
-      document.getElementById('rate-heavy').value = data.heavy;
-    });
+    .then(function (data) {
+      if (data.basic) {
+        document.getElementById('rate-basic').value = data.basic;
+        document.getElementById('rate-extra').value = data.extra;
+        document.getElementById('rate-heavy').value = data.heavy;
+        localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+      }
+    })
+    .catch(function () { /* use localStorage values already loaded */ });
 }
 
 function savePricing() {
@@ -109,7 +113,10 @@ function savePricing() {
     heavy: parseFloat(document.getElementById('rate-heavy').value) || 0
   };
 
-  // Save to API (Redis) — this is what the WhatsApp bot reads
+  // Always save to localStorage immediately (website reads this)
+  localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
+
+  // Also save to API (Redis) so the WhatsApp bot picks it up
   fetch('/api/pricing', {
     method: 'POST',
     headers: {
@@ -121,17 +128,13 @@ function savePricing() {
   .then(function (res) { return res.json(); })
   .then(function (result) {
     if (result.status === 'saved') {
-      // Also save to localStorage for the website booking form
-      localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
       flashStatus('pricing-status', 'Pricing saved!');
     } else {
-      flashStatus('pricing-status', 'Error: ' + (result.error || 'unknown'));
+      flashStatus('pricing-status', 'Saved locally. Server sync will work once Redis is configured.');
     }
   })
   .catch(function () {
-    // Save to localStorage as fallback
-    localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
-    flashStatus('pricing-status', 'Saved locally (server unavailable).');
+    flashStatus('pricing-status', 'Saved locally. Server sync will work once Redis is configured.');
   });
 }
 
