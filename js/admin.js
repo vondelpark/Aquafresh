@@ -82,28 +82,12 @@ function flashStatus(id, msg) {
 
 /* ===== Pricing ===== */
 function loadPricing() {
-  // Load from localStorage immediately so fields are never empty
+  // Load from localStorage (this is where admin saves go)
   var saved = localStorage.getItem('aquafresh-pricing');
-  var local = saved ? JSON.parse(saved) : DEFAULT_PRICING;
-  document.getElementById('rate-basic').value = local.basic;
-  document.getElementById('rate-extra').value = local.extra;
-  document.getElementById('rate-heavy').value = local.heavy;
-
-  // Then try to sync from API (Redis) if available
-  fetch('/api/pricing')
-    .then(function (res) {
-      if (!res.ok) throw new Error('API error');
-      return res.json();
-    })
-    .then(function (data) {
-      if (data.basic) {
-        document.getElementById('rate-basic').value = data.basic;
-        document.getElementById('rate-extra').value = data.extra;
-        document.getElementById('rate-heavy').value = data.heavy;
-        localStorage.setItem('aquafresh-pricing', JSON.stringify(data));
-      }
-    })
-    .catch(function () { /* use localStorage values already loaded */ });
+  var data = saved ? JSON.parse(saved) : DEFAULT_PRICING;
+  document.getElementById('rate-basic').value = data.basic;
+  document.getElementById('rate-extra').value = data.extra;
+  document.getElementById('rate-heavy').value = data.heavy;
 }
 
 function savePricing() {
