@@ -358,11 +358,12 @@ For each variable below, click **Add New**, paste the **Name** and **Value**, se
 | `REVOLUT_WEBHOOK_SECRET` | Signing secret string | Revolut Business → Developer → Webhooks |
 | `REVOLUT_SANDBOX` | `true` or `false` | Set `true` for testing, `false` for real payments |
 
-**Optional — Notifications:**
+**Optional — Notifications & Cleaner Dispatch:**
 
 | Name | Value | Where to find it |
 |---|---|---|
-| `OWNER_PHONE` | `31619511991` | Your WhatsApp number (no + or spaces) |
+| `OWNER_PHONE` | `31619511991` | Cleaner's WhatsApp number (no + or spaces) — receives paid job links |
+| `SITE_URL` | `https://aquafreshboats.nl` | Your public website URL (used in the job links sent to the cleaner) |
 
 ### 6c. Redeploy after adding variables
 
@@ -407,19 +408,26 @@ Now that Vercel is deployed with your env vars, set up the webhook (Step 3g abov
    - Enter a length (e.g., `10`)
    - Enter a width (e.g., `3`)
    - Select a service tier (tap a button)
-   - Enter a date (e.g., `morgen` or `15 juni`)
+   - Enter a date (e.g., `morgen` or `15 juni`) — the bot checks Google Calendar and only offers free slots
    - Select a time slot (tap a button)
-   - Share your location (tap 📎 → Location) or type a marina name
+   - Share your **location pin** (required — tap 📎 → Location)
+   - Send a **photo of the boat** (required)
    - Enter your name
+   - Add special instructions, or tap "Geen opmerkingen"
    - Confirm the quote
-6. You should get a booking confirmation with a Revolut payment link (if configured)
+6. You receive a Revolut payment link — the booking is only final after payment
+7. After paying: you get a confirmation, the calendar event is created, and the cleaner (`OWNER_PHONE`) receives a WhatsApp with the **job link** (map, photo, instructions)
+8. The cleaner opens the job link, sees all details, and after the job taps **"Markeer als voltooid"** (with optional after-photo + comments)
+9. The customer automatically receives the "job done" message with the after-photo
 
 ### 8b. Test the website booking
 
 1. Go to your website
-2. Fill in the booking form (boat dimensions, service, date, details)
-3. Click **Book Online**
-4. You should get a confirmation, and (if `OWNER_PHONE` is set) a WhatsApp notification to your phone
+2. Pick a date — available time slots are checked against Google Calendar live
+3. Fill in the booking form (boat dimensions, service, location, notes)
+4. Click **Book Online**
+5. You are redirected to the Revolut payment page
+6. After payment: same as WhatsApp — confirmation, calendar event, cleaner dispatch
 
 ### 8c. Test the payment flow
 

@@ -211,7 +211,65 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('input[name="service-tier"]').forEach(function (radio) {
     radio.addEventListener('change', updateEstimate);
   });
+
+  /* Availability check when a date is picked */
+  var dateInput = document.getElementById('preferred-date');
+  if (dateInput) {
+    /* No past dates */
+    dateInput.min = new Date().toISOString().slice(0, 10);
+    dateInput.addEventListener('change', checkAvailability);
+  }
 });
+
+/* ===== Google Calendar availability ===== */
+function checkAvailability() {
+  var date = document.getElementById('preferred-date').value;
+  var timeSelect = document.getElementById('preferred-time');
+  var hint = document.getElementById('availability-hint');
+  if (!date || !timeSelect) return;
+
+  var isNl = document.body.classList.contains('nl');
+  if (hint) {
+    hint.textContent = isNl ? 'Beschikbaarheid controleren…' : 'Checking availability…';
+    hint.style.color = '#64748B';
+  }
+
+  fetch('/api/availability?date=' + encodeURIComponent(date))
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var morningOpt = timeSelect.querySelector('option[value="morning"]');
+      var afternoonOpt = timeSelect.querySelector('option[value="afternoon"]');
+
+      if (morningOpt) morningOpt.disabled = !data.morning;
+      if (afternoonOpt) afternoonOpt.disabled = !data.afternoon;
+
+      /* If the selected option just became unavailable, switch */
+      if (timeSelect.selectedOptions[0] && timeSelect.selectedOptions[0].disabled) {
+        timeSelect.value = data.morning ? 'morning' : (data.afternoon ? 'afternoon' : 'flexible');
+      }
+
+      if (hint) {
+        if (!data.morning && !data.afternoon) {
+          hint.textContent = isNl
+            ? 'Deze datum is volgeboekt — kies "Flexibel" of een andere datum.'
+            : 'This date is fully booked — choose "Flexible" or another date.';
+          hint.style.color = '#DC2626';
+        } else if (!data.morning || !data.afternoon) {
+          var taken = !data.morning ? (isNl ? 'Ochtend' : 'Morning') : (isNl ? 'Middag' : 'Afternoon');
+          hint.textContent = isNl
+            ? taken + ' is al bezet op deze datum.'
+            : taken + ' is already booked on this date.';
+          hint.style.color = '#D97706';
+        } else {
+          hint.textContent = isNl ? 'Beide tijdsloten zijn beschikbaar! ✓' : 'Both time slots are available! ✓';
+          hint.style.color = '#16A34A';
+        }
+      }
+    })
+    .catch(function () {
+      if (hint) hint.textContent = '';
+    });
+}
 
 /* ===== Form Submission — WhatsApp or Online ===== */
 function submitBooking(e) {
@@ -307,12 +365,22 @@ function submitBooking(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(booking)
     })
-    .then(function (res) { return res.json(); })
+    .then(function (res) { return res.json().then(function (d) { d._status = res.status; return d; }); })
     .then(function (data) {
-      if (data.booking_id) {
+      if (data.error === 'slot_taken') {
+        alert(isNl
+          ? 'Dit tijdslot is net geboekt door iemand anders. Kies een andere tijd of datum.'
+          : 'This time slot was just booked by someone else. Please pick another time or date.');
+        checkAvailability();
+      } else if (data.booking_id && data.payment_url) {
+        alert(isNl
+          ? 'Boeking ' + data.booking_id + ' aangemaakt! U wordt doorgestuurd naar de betaalpagina. Na betaling is uw boeking definitief.'
+          : 'Booking ' + data.booking_id + ' created! You will be redirected to the payment page. Your booking is final after payment.');
+        window.location.href = data.payment_url;
+      } else if (data.booking_id) {
         var confirmMsg = isNl
-          ? 'Boeking ontvangen! Uw boekingsnummer is ' + data.booking_id + '. We nemen zo snel mogelijk contact met u op ter bevestiging.'
-          : 'Booking received! Your booking number is ' + data.booking_id + '. We will contact you shortly to confirm.';
+          ? 'Boeking ontvangen! Uw boekingsnummer is ' + data.booking_id + '. We sturen u een betaallink via WhatsApp om de boeking te bevestigen.'
+          : 'Booking received! Your booking number is ' + data.booking_id + '. We will send you a payment link via WhatsApp to confirm the booking.';
         alert(confirmMsg);
         e.target.reset();
         document.querySelector('input[name="service-tier"][value="extra"]').checked = true;
