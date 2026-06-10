@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klus — Aquafresh</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230A3D91'/><text x='5' y='23' font-family='Inter,Arial' font-weight='800' font-size='20' fill='white'>A</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: #F1F5F9; color: #0F172A;
+      padding: 16px; max-width: 560px; margin: 0 auto;
+    }
+    .header {
+      display: flex; align-items: center; gap: 10px; margin: 8px 0 20px;
+    }
+    .logo {
+      width: 36px; height: 36px; border-radius: 9px; background: #0A3D91;
+      color: #fff; font-weight: 800; font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header h1 { font-size: 1.15rem; }
+    .card {
+      background: #fff; border-radius: 14px; padding: 18px;
+      margin-bottom: 14px; box-shadow: 0 1px 3px rgba(15,23,42,.08);
+    }
+    .card h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #64748B; margin-bottom: 12px; }
+    .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #F1F5F9; font-size: .95rem; }
+    .row:last-child { border-bottom: none; }
+    .row .label { color: #64748B; flex-shrink: 0; }
+    .row .value { font-weight: 600; text-align: right; }
+    .status {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: .8rem; font-weight: 700;
+    }
+    .status.paid { background: #DCFCE7; color: #166534; }
+    .status.pending { background: #FEF9C3; color: #854D0E; }
+    .status.done { background: #DBEAFE; color: #1E40AF; }
+    .btn {
+      display: block; width: 100%; padding: 15px; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center;
+      text-decoration: none; margin-top: 10px;
+    }
+    .btn-map { background: #0A3D91; color: #fff; }
+    .btn-done { background: #16A34A; color: #fff; }
+    .btn:disabled { opacity: .5; }
+    .photo { width: 100%; border-radius: 10px; display: block; }
+    .notes-box { background: #FEF9C3; border-radius: 10px; padding: 12px 14px; font-size: .95rem; line-height: 1.5; }
+    textarea, input[type=file] {
+      width: 100%; padding: 12px; border: 1.5px solid #E2E8F0; border-radius: 10px;
+      font-family: inherit; font-size: .95rem; margin-bottom: 10px;
+    }
+    .done-banner {
+      background: #DCFCE7; color: #166534; border-radius: 12px;
+      padding: 16px; text-align: center; font-weight: 700; margin-bottom: 14px;
+    }
+    .err { text-align: center; padding: 60px 20px; color: #64748B; }
+    #preview { width: 100%; border-radius: 10px; margin-bottom: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">A</div>
+    <h1>Aquafresh — Klusdetails</h1>
+  </div>
+
+  <div id="loading" class="err">Laden…</div>
+  <div id="error" class="err" style="display:none">Klus niet gevonden of link verlopen.</div>
+
+  <div id="content" style="display:none">
+    <div id="done-banner" class="done-banner" style="display:none">✅ Deze klus is afgerond</div>
+
+    <div class="card">
+      <h2>Boeking</h2>
+      <div class="row"><span class="label">Nummer</span><span class="value" id="j-id"></span></div>
+      <div class="row"><span class="label">Status</span><span class="value"><span id="j-status" class="status"></span></span></div>
+      <div class="row"><span class="label">Datum</span><span class="value" id="j-date"></span></div>
+      <div class="row"><span class="label">Tijd</span><span class="value" id="j-time"></span></div>
+      <div class="row"><span class="label">Service</span><span class="value" id="j-tier"></span></div>
+      <div class="row"><span class="label">Prijs</span><span class="value" id="j-price"></span></div>
+    </div>
+
+    <div class="card">
+      <h2>Klant &amp; Boot</h2>
+      <div class="row"><span class="label">Naam</span><span class="value" id="j-name"></span></div>
+      <div class="row"><span class="label">Telefoon</span><span class="value"><a id="j-phone" href=""></a></span></div>
+      <div class="row"><span class="label">Boot</span><span class="value" id="j-boat"></span></div>
+      <div class="row"><span class="label">Locatie</span><span class="value" id="j-location"></span></div>
+      <a id="j-map" class="btn btn-map" target="_blank" style="display:none">🗺️ Open in Google Maps</a>
+    </div>
+
+    <div class="card" id="notes-card" style="display:none">
+      <h2>Instructies van de klant</h2>
+      <div class="notes-box" id="j-notes"></div>
+    </div>
+
+    <div class="card" id="photo-card" style="display:none">
+      <h2>Foto van de boot</h2>
+      <img id="j-photo" class="photo" alt="Boot foto">
+    </div>
+
+    <div class="card" id="complete-card">
+      <h2>Klus afronden</h2>
+      <img id="preview" alt="Voorbeeld">
+      <input type="file" id="after-photo" accept="image/*" capture="environment">
+      <textarea id="comments" rows="3" placeholder="Opmerkingen (optioneel)…"></textarea>
+      <button class="btn btn-done" id="btn-complete" onclick="completeJob()">✅ Markeer als voltooid</button>
+    </div>
+  </div>
+
+  <script src="js/job.js"></script>
+</body>
+</html>

@@ -3,13 +3,16 @@
  *
  * POST /api/booking
  *
- * Receives bookings from the website form, saves to store,
- * creates calendar event, and sends WhatsApp notification to owner.
+ * Receives bookings from the website form, checks availability,
+ * saves to store, and returns a Revolut payment link.
+ * The booking is committed (calendar event + cleaner dispatch)
+ * by the Revolut callback once payment completes.
  */
 
 const store = require('../lib/store');
 const wa = require('../lib/whatsapp');
 const calendar = require('../lib/calendar');
+const revolut = require('../lib/revolut');
 const CONFIG = require('../lib/config');
 
 module.exports = async function handler(req, res) {
@@ -31,14 +34,31 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Check the slot is still free
+    try {
+      const slot = data.preferred_time === 'afternoon' ? '12:00-17:00' : '08:00-12:00';
+      const check = await calendar.checkAvailability(data.preferred_date, slot);
+      if (!check.available && data.preferred_time !== 'flexible') {
+        return res.status(409).json({ error: 'slot_taken' });
+      }
+    } catch (err) {
+      console.error('[Booking API - Availability]', err.message);
+    }
+
     const bookingId = store.generateBookingId();
+
+    // Normalize phone to international digits (e.g. "+31 6 19..." → "31619...")
+    let phone = String(data.phone_number).replace(/\D/g, '');
+    if (phone.startsWith('0031')) phone = phone.slice(2);
+    else if (phone.startsWith('0') && phone.length === 10) phone = '31' + phone.slice(1);
 
     const booking = {
       booking_id: bookingId,
+      job_key: store.generateJobKey(),
       created_at: new Date().toISOString(),
       source: 'website',
       customer_name: data.customer_name,
-      phone_number: data.phone_number,
+      phone_number: phone,
       email: data.email || null,
       boat_length_m: data.boat_length_m,
       boat_width_m: data.boat_width_m,
@@ -52,54 +72,44 @@ module.exports = async function handler(req, res) {
       boat_location: data.boat_location,
       notes: data.notes || null,
       language: data.language || 'nl',
-      booking_status: 'Booked - Pending Confirmation',
+      booking_status: 'Pending Payment',
       payment_status: 'Pending',
       payment_url: null,
       calendar_event_id: null,
     };
 
-    // Save booking
-    await store.saveBooking(booking);
-
-    // Try to create calendar event
+    // Generate Revolut payment link
     try {
-      const eventId = await calendar.createEvent(booking);
-      booking.calendar_event_id = eventId;
-      await store.saveBooking(booking);
+      booking.payment_url = await revolut.createPaymentRequest(booking);
     } catch (err) {
-      console.error('[Booking API - Calendar]', err.message);
+      console.error('[Booking API - Revolut]', err.message);
     }
 
-    // Notify the business owner via WhatsApp (if configured)
-    try {
-      if (CONFIG.WA_ACCESS_TOKEN && CONFIG.WA_PHONE_NUMBER_ID) {
-        // Send to the business's own WhatsApp number
-        const ownerPhone = CONFIG.OWNER_PHONE || '';
-        if (ownerPhone) {
-          const msg =
-            `🆕 *Nieuwe online boeking!*\n\n` +
-            `📋 Boeking: *${bookingId}*\n` +
-            `👤 ${booking.customer_name}\n` +
-            `📞 ${booking.phone_number}\n` +
-            (booking.email ? `📧 ${booking.email}\n` : '') +
-            `🚤 Boot: ${booking.boat_length_m}m × ${booking.boat_width_m}m (${booking.estimated_area_m2} m²)\n` +
-            `🧹 ${booking.tier_label} (€${booking.price_per_m2}/m²)\n` +
-            `📅 ${booking.preferred_date} om ${booking.preferred_time}\n` +
-            `📍 ${booking.boat_location}\n` +
-            `💰 €${booking.quoted_amount_eur}\n` +
-            (booking.notes ? `📝 ${booking.notes}\n` : '') +
-            `\nBron: Website`;
+    await store.saveBooking(booking);
 
-          await wa.sendText(ownerPhone, msg);
-        }
-      }
-    } catch (err) {
-      console.error('[Booking API - WA Notify]', err.message);
+    // If payments aren't configured, fall back to manual confirmation:
+    // notify the owner so they can follow up directly.
+    if (!booking.payment_url && CONFIG.WA_ACCESS_TOKEN && CONFIG.OWNER_PHONE) {
+      const msg =
+        `🆕 *Nieuwe online boeking (handmatig bevestigen)*\n\n` +
+        `📋 ${bookingId}\n` +
+        `👤 ${booking.customer_name}\n` +
+        `📞 ${booking.phone_number}\n` +
+        (booking.email ? `📧 ${booking.email}\n` : '') +
+        `🚤 ${booking.boat_length_m}m × ${booking.boat_width_m}m (${booking.estimated_area_m2} m²)\n` +
+        `🧹 ${booking.tier_label} (€${booking.price_per_m2}/m²)\n` +
+        `📅 ${booking.preferred_date} om ${booking.preferred_time}\n` +
+        `📍 ${booking.boat_location}\n` +
+        `💰 €${booking.quoted_amount_eur}\n` +
+        (booking.notes ? `📝 ${booking.notes}\n` : '') +
+        `\nBron: Website — betaallink kon niet worden aangemaakt.`;
+      await wa.sendText(CONFIG.OWNER_PHONE, msg).catch(() => {});
     }
 
     return res.status(200).json({
       booking_id: bookingId,
-      status: 'received',
+      status: 'pending_payment',
+      payment_url: booking.payment_url,
     });
 
   } catch (err) {
